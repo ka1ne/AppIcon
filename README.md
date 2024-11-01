@@ -178,7 +178,7 @@ on:
 
 jobs:
   generate-icons:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
