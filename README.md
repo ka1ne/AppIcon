@@ -103,7 +103,7 @@ $ make test
 
 Takeshi Ihara <afrontier829@gmail.com>
 
-```
+
 # AppIcon GitHub Action
 
 This GitHub Action generates app icons for iOS and macOS applications using the AppIcon tool. It can be triggered manually or via a webhook to automatically generate app icons based on a provided image URL.
