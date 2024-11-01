@@ -1,0 +1,49 @@
+name: AppIcon Webhook
+
+on:
+  repository_dispatch:
+    types: [generate-app-icon]
+
+jobs:
+  generate-icons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Validate input
+        run: |
+          if [[ -z "${{ github.event.client_payload.icon_url }}" ]]; then
+            echo "Error: icon_url is required"
+            exit 1
+          fi
+
+      - name: Generate App Icons
+        uses: ka1ne/AppIcon@master  # Use @master or a specific tag once you've released a version
+        with:
+          icon-source: ${{ github.event.client_payload.icon_url }}
+          output-path: './Assets.xcassets/AppIcon.appiconset'
+          icon-name: 'MyAppIcon'
+          mac: 'true'
+          watch: 'false'
+        continue-on-error: false
+
+      - name: Upload generated icons
+        uses: actions/upload-artifact@v2
+        with:
+          name: AppIcon.appiconset
+          path: './Assets.xcassets/AppIcon.appiconset'
+        if: success()
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'AppIcon Generation Failed',
+              body: 'The AppIcon generation webhook failed. Please check the logs for more information.'
+            })
