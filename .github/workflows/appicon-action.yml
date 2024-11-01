@@ -11,13 +11,21 @@ jobs:
       - name: Set up Swift
         uses: swift-actions/setup-swift@v1
 
+      - name: Install dependencies
+        run: |
+          brew install libgd
+          brew install libjpeg
+          brew install libpng
+
       - name: Build AppIcon
-        run: make build
-        continue-on-error: false
+        run: |
+          swift build -c release
+          mkdir -p build/release
+          cp .build/release/appicon build/release/
 
       - name: Run AppIcon
         run: |
-          if ! ./build/release/appicon path/to/your/icon.png; then
+          if ! ./build/release/appicon ${{ github.event.client_payload.icon_source }}; then
             echo "AppIcon generation failed"
             exit 1
           fi
