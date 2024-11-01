@@ -1,0 +1,29 @@
+name: 'AppIcon Generator'
+description: 'Generates app icons for iOS and macOS applications'
+inputs:
+  icon_source:
+    description: 'Path or URL of the base icon image (1024x1024 PNG)'
+    required: true
+  output_path:
+    description: 'Path where the generated AppIcon.appiconset will be saved'
+    default: './AppIcon.appiconset'
+  icon_name:
+    description: 'Name for the generated icons'
+    default: 'AppIcon'
+  mac:
+    description: 'Generate macOS icons'
+    default: 'false'
+  watch:
+    description: 'Generate watchOS icons'
+    default: 'false'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.icon_source }}
+    - --output-path
+    - ${{ inputs.output_path }}
+    - --icon-name
+    - ${{ inputs.icon_name }}
+    - ${{ inputs.mac == 'true' && '--mac' || '' }}
+    - ${{ inputs.watch == 'true' && '--watch' || '' }}

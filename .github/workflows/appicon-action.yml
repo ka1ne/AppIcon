@@ -1,0 +1,51 @@
+name: AppIcon Generator
+
+on: workflow_dispatch
+
+jobs:
+  generate-icons:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v1
+
+      - name: Install dependencies
+        run: |
+          brew install libgd
+          brew install libjpeg
+          brew install libpng
+
+      - name: Build AppIcon
+        run: |
+          swift build -c release
+          mkdir -p build/release
+          cp .build/release/appicon build/release/
+
+      - name: Run AppIcon
+        run: |
+          if ! ./build/release/appicon ${{ github.event.client_payload.icon_source }}; then
+            echo "AppIcon generation failed"
+            exit 1
+          fi
+        
+      - name: Upload generated icons
+        uses: actions/upload-artifact@v2
+        with:
+          name: AppIcon.appiconset
+          path: ./AppIcon.appiconset
+        if: success()
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'AppIcon Generation Failed',
+              body: 'The AppIcon generation workflow failed. Please check the logs for more information.'
+            })

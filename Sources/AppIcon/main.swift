@@ -2,6 +2,13 @@ import AppIconCore
 import ArgumentParser
 import Foundation
 
+enum AppIconError: Error {
+    case invalidImageFormat
+    case downloadFailed
+    case imageExtractionFailed
+    case jsonExtractionFailed
+}
+
 struct AppIcon: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "appicon",
@@ -9,8 +16,8 @@ struct AppIcon: ParsableCommand {
         version: "1.0.6"
     )
 
-    @Argument(help: "The path to the base image (1024x1024.png)", completion: .file(extensions: ["png"]))
-    var image: String
+    @Argument(help: "The path or URL to the base image (1024x1024.png)")
+    var imageSource: String
 
     @Option(help: "The name of the generated image")
     var iconName = "AppIcon"
@@ -24,14 +31,28 @@ struct AppIcon: ParsableCommand {
     @Flag(help: "Generate also Apple Watch icons")
     var watch = false
 
-    func run() throws {
-        guard let `extension` = image.split(separator: ".").last,
-              `extension`.caseInsensitiveCompare("png") == .orderedSame else {
-            throw ValidationError("image path should have .png extension")
+    func validate() throws {
+        guard imageSource.lowercased().hasSuffix(".png") else {
+            throw ValidationError("The image should have a .png extension")
         }
+    }
 
-        guard FileManager.default.fileExists(atPath: image) else {
-            throw ValidationError("an input image is not exists")
+    func run() throws {
+        let tempImagePath = "/tmp/input_image.png"
+        var inputImagePath: String
+
+        if let url = URL(string: imageSource), url.scheme != nil {
+            do {
+                try downloadImage(from: url, to: tempImagePath)
+                inputImagePath = tempImagePath
+            } catch {
+                throw AppIconError.downloadFailed
+            }
+        } else {
+            guard FileManager.default.fileExists(atPath: imageSource) else {
+                throw ValidationError("The input image does not exist at the specified path")
+            }
+            inputImagePath = imageSource
         }
 
         let outputExpansion = ".appiconset"
@@ -39,21 +60,35 @@ struct AppIcon: ParsableCommand {
         let platform = Platform(mac: mac, watch: watch)
 
         do {
-            try ImageExtractor.extract(base: image, output: outputPath, iconName: iconName, platform: platform)
+            try ImageExtractor.extract(base: inputImagePath, output: outputPath, iconName: iconName, platform: platform)
         } catch {
-            print("Image Extraction Error has occurred 😱")
-            throw ExitCode(1)
+            print("Image Extraction Error has occurred: \(error.localizedDescription)")
+            throw AppIconError.imageExtractionFailed
         }
 
         do {
             try JsonExtractor.extract(output: outputPath, iconName: iconName, platform: platform)
         } catch {
-            print("Json Extraction Error has occurred 😱")
-            throw ExitCode(1)
+            print("Json Extraction Error has occurred: \(error.localizedDescription)")
+            throw AppIconError.jsonExtractionFailed
         }
 
         print("\(outputPath) has been generated 🎉")
+
+        if inputImagePath == tempImagePath {
+            try? FileManager.default.removeItem(atPath: tempImagePath)
+        }
+    }
+
+    private func downloadImage(from url: URL, to path: String) throws {
+        let data = try Data(contentsOf: url)
+        try data.write(to: URL(fileURLWithPath: path))
     }
 }
 
-AppIcon.main()
+do {
+    var appIcon = try AppIcon.parse()
+    try appIcon.run()
+} catch {
+    AppIcon.exit(withError: error)
+}
