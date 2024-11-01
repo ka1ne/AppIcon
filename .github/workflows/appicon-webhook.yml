@@ -1,32 +1,28 @@
-name: AppIcon Webhook
+name: AppIcon Generator
 
 on:
   repository_dispatch:
     types: [generate-app-icon]
+  workflow_dispatch:
+    inputs:
+      icon_source:
+        description: 'Path to source icon file'
+        required: true
 
 jobs:
   generate-icons:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Validate input
-        run: |
-          if [[ -z "${{ github.event.client_payload.icon_source }}" ]]; then
-            echo "Error: icon_source is required"
-            exit 1
-          fi
+      - uses: actions/checkout@v2
 
       - name: Generate App Icons
-        uses: ka1ne/AppIcon@master  # Use @master or a specific tag once you've released a version
+        uses: ka1ne/AppIcon@master
         with:
-          icon-source: ${{ github.event.client_payload.icon_source }}
-          output-path: './Assets.xcassets/AppIcon.appiconset'
-          icon-name: 'MyAppIcon'
+          icon_source: ${{ github.event.client_payload.icon_source || github.event.inputs.icon_source }}
+          output_path: './Assets.xcassets/AppIcon.appiconset'
+          icon_name: 'MyAppIcon'
           mac: 'true'
           watch: 'false'
-        continue-on-error: false
 
       - name: Upload generated icons
         uses: actions/upload-artifact@v2
