@@ -131,13 +131,13 @@ You can use this action in your workflow by adding the following step:
 - `mac` (optional): Generate macOS icons (default: 'false')
 - `watch` (optional): Generate watchOS icons (default: 'false')
 
-## Webhook Setup
+## Repository Dispatch API Usage
 
-To trigger this action via a webhook, follow these steps:
+To trigger this action programmatically via GitHub's API, follow these steps:
 
 1. Create a GitHub Personal Access Token (PAT) with `repo` scope.
 
-2. Send a POST request to GitHub's API with the following format:
+2. Send a POST request to GitHub's Repository Dispatch API:
 
 ```bash
 curl -X POST \
@@ -166,7 +166,7 @@ The `client_payload` should contain:
 }
 ```
 
-Note: The other parameters (`output_path`, `icon_name`, `mac`, `watch`) are configured in the workflow file and cannot be modified via the webhook payload.
+Note: The other parameters (`output_path`, `icon_name`, `mac`, `watch`) are configured in the workflow file and cannot be modified via the API payload.
 
 ## License
 
