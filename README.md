@@ -135,71 +135,38 @@ You can use this action in your workflow by adding the following step:
 
 To trigger this action via a webhook, follow these steps:
 
-1. In your repository, go to Settings > Webhooks > Add webhook.
+1. Create a GitHub Personal Access Token (PAT) with `repo` scope.
 
-2. Set the Payload URL to:
-   ```
-   https://api.github.com/repos/{owner}/{repo}/dispatches
-   ```
-   Replace `{owner}` and `{repo}` with your GitHub username and repository name.
-
-3. Set the Content type to `application/json`.
-
-4. Set a Secret for added security.
-
-5. Under "Which events would you like to trigger this webhook?", select "Let me select individual events" and check "Repository dispatch".
-
-6. Click "Add webhook" to save.
-
-## Triggering the Webhook
-
-To trigger the webhook, send a POST request to the GitHub API. Here's an example using curl:
+2. Send a POST request to GitHub's API with the following format:
 
 ```bash
 curl -X POST \
-  -H "Authorization: token YOUR_GITHUB_TOKEN" \
+  -H "Authorization: Bearer YOUR_GITHUB_PAT" \
   -H "Accept: application/vnd.github.v3+json" \
   https://api.github.com/repos/{owner}/{repo}/dispatches \
-  -d '{"event_type": "generate-app-icon", "client_payload": {"icon_url": "https://example.com/path/to/icon.png"}}'
+  -d '{
+    "event_type": "generate-app-icon",
+    "client_payload": {
+      "icon_source": "https://example.com/path/to/icon.png"
+    }
+  }'
 ```
 
-Replace `YOUR_GITHUB_TOKEN` with a personal access token with the `repo` scope, and `{owner}` and `{repo}` with your GitHub username and repository name.
+The `client_payload` should contain:
+- `icon_source` (required): Path or URL to your 1024x1024 PNG icon
 
-## Example Workflow
+### Example JSON Payload
 
-Here's an example workflow that uses this action and can be triggered by the webhook:
-
-```yaml
-name: AppIcon Webhook
-
-on:
-  repository_dispatch:
-    types: [generate-app-icon]
-
-jobs:
-  generate-icons:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Generate App Icons
-        uses: ka1ne/AppIcon@v1  # Replace with the latest version
-        with:
-          icon-source: ${{ github.event.client_payload.icon_url }}
-          output-path: './Assets.xcassets/AppIcon.appiconset'
-          icon-name: 'MyAppIcon'
-          mac: 'true'
-          watch: 'false'
-
-      - name: Upload generated icons
-        uses: actions/upload-artifact@v2
-        with:
-          name: AppIcon.appiconset
-          path: './Assets.xcassets/AppIcon.appiconset'
+```json
+{
+  "event_type": "generate-app-icon",
+  "client_payload": {
+    "icon_source": "https://example.com/path/to/icon.png"
+  }
+}
 ```
 
-This workflow will be triggered when the webhook receives a `generate-app-icon` event, generate the app icons using the provided image URL, and upload the resulting icons as an artifact.
+Note: The other parameters (`output_path`, `icon_name`, `mac`, `watch`) are configured in the workflow file and cannot be modified via the webhook payload.
 
 ## License
 
