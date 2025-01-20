@@ -25,7 +25,7 @@ jobs:
           watch: 'false'
 
       - name: Upload generated icons
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: AppIcon.appiconset
           path: './Assets.xcassets/AppIcon.appiconset'
