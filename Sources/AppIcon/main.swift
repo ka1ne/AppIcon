@@ -47,6 +47,7 @@ struct AppIcon: ParsableCommand {
                 try downloadImage(from: url, to: tempImagePath)
                 inputImagePath = tempImagePath
             } catch {
+                print("Download failed with error: \(error.localizedDescription)")
                 throw AppIconError.downloadFailed
             }
         } else {
