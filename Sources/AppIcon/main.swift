@@ -83,7 +83,10 @@ struct AppIcon: ParsableCommand {
     }
 
     private func downloadImage(from url: URL, to path: String) {
-        let session = URLSession(configuration: .default)  // Ensure URLSession is initialized for non-iOS environments
+        // Ensure URLSession is initialized for non-iOS environments
+        let configuration = URLSessionConfiguration.default
+        let session = URLSession(configuration: configuration)
+        
         let task = session.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Download failed with error: \(error.localizedDescription)")
