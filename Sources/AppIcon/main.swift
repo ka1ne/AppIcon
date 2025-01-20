@@ -82,32 +82,9 @@ struct AppIcon: ParsableCommand {
         }
     }
 
-    private func downloadImage(from url: URL, to path: String) {
-        // Ensure URLSession is initialized for non-iOS environments
-        let configuration = URLSessionConfiguration.default
-        let session = URLSession(configuration: configuration)
-        
-        let task = session.dataTask(with: url) { data, response, error in
-            if let error = error {
-                print("Download failed with error: \(error.localizedDescription)")
-                return
-            }
-            
-            guard let data = data else {
-                print("No data received.")
-                return
-            }
-            
-            do {
-                let fileURL = URL(fileURLWithPath: path)
-                try data.write(to: fileURL)
-                print("Image saved to \(path)")
-            } catch {
-                print("Failed to write data to path: \(error.localizedDescription)")
-            }
-        }
-        
-        task.resume()
+    private func downloadImage(from url: URL, to path: String) throws {
+        let data = try Data(contentsOf: url)
+        try data.write(to: URL(fileURLWithPath: path))
     }
 }
 
