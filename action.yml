@@ -25,5 +25,4 @@ runs:
     - ${{ inputs.output_path }}
     - --icon-name
     - ${{ inputs.icon_name }}
-    - ${{ inputs.mac == 'true' && '--mac' || '' }}
-    - ${{ inputs.watch == 'true' && '--watch' || '' }}
+
