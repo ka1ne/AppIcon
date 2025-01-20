@@ -33,6 +33,7 @@ struct AppIcon: ParsableCommand {
 
     func validate() throws {
         guard imageSource.lowercased().hasSuffix(".png") else {
+            print(imageSource)
             throw ValidationError("The image should have a .png extension")
         }
     }
