@@ -20,12 +20,6 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - "echo 'Input Arguments:'" 
-    - "echo 'icon_source: ${{ inputs.icon_source }}'"
-    - "echo 'output_path: ${{ inputs.output_path }}'"
-    - "echo 'icon_name: ${{ inputs.icon_name }}'"
-    - "echo 'mac: ${{ inputs.mac }}'"
-    - "echo 'watch: ${{ inputs.watch }}'"
     - ${{ inputs.icon_source }}
     - --output-path
     - ${{ inputs.output_path }}
