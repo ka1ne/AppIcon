@@ -82,9 +82,28 @@ struct AppIcon: ParsableCommand {
         }
     }
 
-    private func downloadImage(from url: URL, to path: String) throws {
-        let data = try Data(contentsOf: url)
-        try data.write(to: URL(fileURLWithPath: path))
+    private func downloadImage(from url: URL, to path: String) {
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Download failed with error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received.")
+                return
+            }
+            
+            do {
+                let fileURL = URL(fileURLWithPath: path)
+                try data.write(to: fileURL)
+                print("Image saved to \(path)")
+            } catch {
+                print("Failed to write data to path: \(error.localizedDescription)")
+            }
+        }
+        
+        task.resume()
     }
 }
 
