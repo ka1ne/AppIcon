@@ -1,7 +1,6 @@
 import AppIconCore
 import ArgumentParser
 import Foundation
-import AppKit
 
 enum AppIconError: Error {
     case invalidImageFormat
@@ -86,9 +85,6 @@ struct AppIcon: ParsableCommand {
     private func downloadImage(from url: URL, to path: String) throws {
         do {
             let data = try Data(contentsOf: url)
-            guard let image = NSImage(data: data), image.isValid else {
-                throw AppIconError.invalidImageFormat
-            }
             try data.write(to: URL(fileURLWithPath: path))
         } catch let error as AppIconError {
             throw error
