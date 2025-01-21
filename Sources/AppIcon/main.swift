@@ -83,12 +83,35 @@ struct AppIcon: ParsableCommand {
     }
 
     private func downloadImage(from url: URL, to path: String) throws {
-        do {
-            let data = try Data(contentsOf: url)
-            try data.write(to: URL(fileURLWithPath: path))
-        } catch let error as AppIconError {
-            throw error
-        } catch {
+        let semaphore = DispatchSemaphore(value: 0)
+        var downloadError: Error?
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            defer { semaphore.signal() }
+            
+            if let error = error {
+                downloadError = error
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                (200...299).contains(httpResponse.statusCode),
+                let data = data else {
+                downloadError = AppIconError.downloadFailed
+                return
+            }
+            
+            do {
+                try data.write(to: URL(fileURLWithPath: path))
+            } catch {
+                downloadError = error
+            }
+        }
+        
+        task.resume()
+        semaphore.wait()
+        
+        if let error = downloadError {
             print("Download failed: \(error.localizedDescription)")
             throw AppIconError.downloadFailed
         }
