@@ -98,9 +98,17 @@ struct AppIcon: ParsableCommand {
             }
             
             guard let httpResponse = response as? HTTPURLResponse,
-                (200...299).contains(httpResponse.statusCode),
-                let data = data else {
+                  (200...299).contains(httpResponse.statusCode),
+                  let data = data else {
                 downloadError = AppIconError.downloadFailed
+                return
+            }
+            
+            // Validate PNG format
+            let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+            guard data.count > 8,
+                  data.prefix(8).elementsEqual(pngSignature) else {
+                downloadError = AppIconError.invalidImageFormat
                 return
             }
             
