@@ -15,13 +15,5 @@ RUN apt-get update && apt-get install -y libgd-dev libjpeg-dev libpng-dev make i
 # Run Swift build and then install
 RUN make install
 
-# Create a wrapper script
-RUN echo '#!/bin/bash\n\
-echo "=== Input Arguments ==="\n\
-echo "Arguments received: $@"\n\
-echo "====================="\n\
-appicon "$@"' > /usr/local/bin/wrapper.sh && \
-    chmod +x /usr/local/bin/wrapper.sh
-
 # Use the wrapper script as the entry point
-ENTRYPOINT ["/usr/local/bin/wrapper.sh"]
+ENTRYPOINT ["appicon"]
