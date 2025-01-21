@@ -1,6 +1,7 @@
 import AppIconCore
 import ArgumentParser
 import Foundation
+import AppKit
 
 enum AppIconError: Error {
     case invalidImageFormat
