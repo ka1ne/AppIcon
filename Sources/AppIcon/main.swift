@@ -1,6 +1,9 @@
 import AppIconCore
 import ArgumentParser
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 enum AppIconError: Error {
     case invalidImageFormat
