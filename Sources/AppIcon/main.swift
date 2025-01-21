@@ -1,6 +1,9 @@
 import AppIconCore
 import ArgumentParser
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 enum AppIconError: Error {
     case invalidImageFormat
@@ -33,6 +36,7 @@ struct AppIcon: ParsableCommand {
 
     func validate() throws {
         guard imageSource.lowercased().hasSuffix(".png") else {
+
             throw ValidationError("The image should have a .png extension")
         }
     }
@@ -46,6 +50,7 @@ struct AppIcon: ParsableCommand {
                 try downloadImage(from: url, to: tempImagePath)
                 inputImagePath = tempImagePath
             } catch {
+                print("Download failed with error: \(error.localizedDescription)")
                 throw AppIconError.downloadFailed
             }
         } else {
@@ -81,8 +86,46 @@ struct AppIcon: ParsableCommand {
     }
 
     private func downloadImage(from url: URL, to path: String) throws {
-        let data = try Data(contentsOf: url)
-        try data.write(to: URL(fileURLWithPath: path))
+        let semaphore = DispatchSemaphore(value: 0)
+        var downloadError: Error?
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            defer { semaphore.signal() }
+            
+            if let error = error {
+                downloadError = error
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode),
+                  let data = data else {
+                downloadError = AppIconError.downloadFailed
+                return
+            }
+            
+            // Validate PNG format
+            let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+            guard data.count > 8,
+                  data.prefix(8).elementsEqual(pngSignature) else {
+                downloadError = AppIconError.invalidImageFormat
+                return
+            }
+            
+            do {
+                try data.write(to: URL(fileURLWithPath: path))
+            } catch {
+                downloadError = error
+            }
+        }
+        
+        task.resume()
+        semaphore.wait()
+        
+        if let error = downloadError {
+            print("Download failed: \(error.localizedDescription)")
+            throw AppIconError.downloadFailed
+        }
     }
 }
 
